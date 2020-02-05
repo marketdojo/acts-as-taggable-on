@@ -277,7 +277,6 @@ module ActsAsTaggableOn::Taggable
           new_tagging = taggings.new(
             tag_id: tag.id, context: context.to_s, taggable: self
           )
-          debugger
           all_taggings << new_tagging if new_tagging.valid?
         end
         ActsAsTaggableOn::Tagging.import all_taggings
