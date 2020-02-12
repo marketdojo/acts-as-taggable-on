@@ -230,23 +230,20 @@ module ActsAsTaggableOn::Taggable
     end
 
     def save_tags
+      all_taggings = []
       tagging_contexts.each do |context|
         next unless tag_list_cache_set_on(context)
         # List of currently assigned tag names
         tag_list = tag_list_cache_on(context).uniq
-
         # Find existing tags or create non-existing tags:
         tags = find_or_create_tags_from_list_with_context(tag_list, context)
-
         # Tag objects for currently assigned tags
         current_tags = tags_on(context)
-
         # Tag maintenance based on whether preserving the created order of tags
         if self.class.preserve_tag_order?
           old_tags, new_tags = current_tags - tags, tags - current_tags
 
           shared_tags = current_tags & tags
-
           if shared_tags.any? && tags[0...shared_tags.size] != shared_tags
             index = shared_tags.each_with_index { |_, i| break i unless shared_tags[i] == tags[i] }
 
@@ -272,16 +269,22 @@ module ActsAsTaggableOn::Taggable
 
         # we have used activerecord-import to bulk create tagging at once
         # creating each tag one by one giving performance issue
-        all_taggings = []
+
+        # if new record is being created for object then please set attr_accessor
+        # named is_new to your model and set its value to true
+        # this will skip validates_uniqueness_of :tag_id on tagging and prevent
+        # additional query to DB as while creating we don't need to check uniqueness
+
         new_tags.each do |tag|
           new_tagging = taggings.new(
             tag_id: tag.id, context: context.to_s, taggable: self
           )
+          new_tagging.validates_uniqueness = !self.is_new
+          debugger
           all_taggings << new_tagging if new_tagging.valid?
         end
-        ActsAsTaggableOn::Tagging.import all_taggings
       end
-
+      ActsAsTaggableOn::Tagging.import all_taggings
       true
     end
 

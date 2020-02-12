@@ -3,6 +3,8 @@ module ActsAsTaggableOn
     self.table_name = ActsAsTaggableOn.taggings_table
 
     DEFAULT_CONTEXT = 'tags'
+    attr_accessor :validates_uniqueness
+
     belongs_to :tag, class_name: '::ActsAsTaggableOn::Tag', counter_cache: ActsAsTaggableOn.tags_counter
     belongs_to :taggable, polymorphic: true
 
@@ -17,7 +19,7 @@ module ActsAsTaggableOn
     validates_presence_of :context
     validates_presence_of :tag_id
 
-    validates_uniqueness_of :tag_id, scope: [:taggable_type, :taggable_id, :context, :tagger_id, :tagger_type]
+    validates_uniqueness_of :tag_id, scope: [:taggable_type, :taggable_id, :context, :tagger_id, :tagger_type], if: :validates_uniqueness
 
     after_destroy :remove_unused_tags
 
