@@ -279,8 +279,8 @@ module ActsAsTaggableOn::Taggable
           new_tagging = taggings.new(
             tag_id: tag.id, context: context.to_s, taggable: self
           )
-          new_tagging.validates_uniqueness = !self.is_new
-          debugger
+          is_uniq = self.respond_to?(:is_new) ? !self.is_new : false
+          new_tagging.validates_uniqueness = is_uniq
           all_taggings << new_tagging if new_tagging.valid?
         end
       end
